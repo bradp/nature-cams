@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <head>
+    <meta charset="utf-8" />
+    <title>Random Nature Stream</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script>
+      // grab search params from the URL
+      const searchParams = new URLSearchParams(window.location.search);
+
+      // 79 refers to "currently-live"
+      const camGroupId = searchParams.get("camGroupId") || "79";
+
+      // how often to refresh the page
+      const refreshInterval =
+        parseInt(searchParams.get("refreshInterval")) || 65000;
+
+      const randomCam = async () => {
+        // current time, in milliseconds
+        const currentTimeMillis = new Date().getTime();
+
+        const camGroupResult = await fetch(
+          `https://omega.explore.org/api/get_cam_group_info.json?t=${currentTimeMillis}&id=${camGroupId}`
+        );
+
+        const camGroup = await camGroupResult.json();
+
+        // only want active feeds
+        const activeFeeds = camGroup.data.feeds.filter(
+          feed => !feed.is_inactive
+        );
+
+        // choose a random one...
+        const randomFeed =
+          activeFeeds[Math.floor(Math.random() * activeFeeds.length)];
+
+          console.log (  randomFeed.large_feed_html )
+        // and shove it into the page
+        document.body.innerHTML = `<iframe src="${
+          randomFeed.large_feed_html
+        }" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen width="100%" height="100%"></iframe>`;
+
+        document.title = `${randomFeed.title} - Random Nature Stream`;
+      };
+
+      // call function to set camera on page load
+      (async () => await randomCam())();
+
+      // refresh the camera every minute
+      setInterval(randomCam, refreshInterval);
+    </script>
+  </head>
+  <div id="player" width="100%" height="100%"></div>
+  <body style="height: 100%; margin: 0; overflow: hidden;"></body>
+</html>
